@@ -596,10 +596,10 @@
             
             container.innerHTML = arts.map(art => `
                 <div class="art-card">
-                    <img src="${API_BASE_URL}/api/arts/${art.id}/image" 
-                         alt="${art.art_name}" 
+                    <img src="${API_BASE_URL}/api/arts/${art.id}/image?api_key=${currentApiKey}"
+                         alt="${art.art_name}"
                          class="art-image"
-                         onclick="openImageModal('${API_BASE_URL}/api/arts/${art.id}/image')">
+                         onclick="openImageModal('${API_BASE_URL}/api/arts/${art.id}/image?api_key=${currentApiKey}')">
                     <div class="art-info">
                         <h3 class="art-title">${art.art_name || 'Без названия'}</h3>
                         <p class="art-caption">${art.caption || 'Без описания'}</p>
