@@ -6,6 +6,7 @@
     <title>🍬 Loli Art Gallery</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Все ваши стили остаются без изменений */
         * {
             margin: 0;
             padding: 0;
@@ -586,8 +587,10 @@
         <span id="notificationText">Уведомление</span>
     </div>
 
+    <!-- Подключаем proxy.js -->
+    <script src="proxy.js"></script>
+    
     <script>
-        const API_BASE_URL = "/.netlify/functions/proxy";
         let currentView = 'feed';
         let arts = [];
         let currentIndex = 0;
@@ -617,7 +620,7 @@
             document.getElementById('settingsModal').style.display = 'none';
         });
 
-        document.getElementById('saveSettings').addEventListener('click', () => {
+        document.getElementById('saveSettings').addEventListener('click', async () => {
             apiKey = document.getElementById('apiKeyInput').value.trim();
             limit = parseInt(document.getElementById('limitInput').value);
             
@@ -626,7 +629,7 @@
             
             document.getElementById('settingsModal').style.display = 'none';
             showNotification('Настройки сохранены!');
-            loadArts();
+            await loadArts();
         });
 
         // Модальное окно изображения
@@ -648,31 +651,30 @@
             }
         });
 
-        document.getElementById('nextArt').addEventListener('click', () => {
+        document.getElementById('nextArt').addEventListener('click', async () => {
             if (currentIndex < arts.length - 1) {
                 currentIndex++;
                 displayFeed();
             } else {
-                loadMoreArts();
+                await loadMoreArts();
             }
         });
 
         document.getElementById('randomArt').addEventListener('click', () => {
-            currentIndex = Math.floor(Math.random() * arts.length);
-            displayFeed();
+            if (arts.length > 0) {
+                currentIndex = Math.floor(Math.random() * arts.length);
+                displayFeed();
+            }
         });
 
         // Функции
         async function loadArts() {
             try {
                 showLoading();
-                const response = await fetch(`${API_BASE_URL}/api/arts?limit=${limit}&offset=0`, {
-                    headers: { 'X-API-Key': apiKey }
-                });
-
-                if (!response.ok) throw new Error(`Ошибка ${response.status}`);
-
-                const data = await response.json();
+                
+                // Используем прокси из proxy.js
+                const data = await window.ArtProxy.getArts(limit, 0);
+                
                 arts = data.arts || [];
                 currentIndex = 0;
 
@@ -684,27 +686,27 @@
                 switchView();
                 showNotification(`Загружено ${arts.length} артов`);
             } catch (error) {
+                console.error('Ошибка при загрузке:', error);
                 showError(`Ошибка загрузки: ${error.message}`);
             }
         }
 
         async function loadMoreArts() {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/arts?limit=${limit}&offset=${arts.length}`, {
-                    headers: { 'X-API-Key': apiKey }
-                });
-
-                if (!response.ok) throw new Error(`Ошибка ${response.status}`);
-
-                const data = await response.json();
+                // Используем прокси для загрузки дополнительных артов
+                const data = await window.ArtProxy.getArts(limit, arts.length);
+                
                 if (data.arts && data.arts.length > 0) {
                     arts = [...arts, ...data.arts];
                     currentIndex = arts.length - data.arts.length;
                     displayFeed();
-                    showNotification('Загружены новые арты');
+                    showNotification(`Загружены новые арты (+${data.arts.length})`);
+                } else {
+                    showNotification('Больше артов нет');
                 }
             } catch (error) {
                 console.error('Ошибка загрузки:', error);
+                showError(`Ошибка: ${error.message}`);
             }
         }
 
@@ -727,14 +729,15 @@
             if (arts.length === 0) return;
 
             const art = arts[currentIndex];
-            const imageUrl = `${API_BASE_URL}/api/arts/${art.id}/image?api_key=${apiKey}`;
+            // Используем функцию из proxy.js для получения URL изображения
+            const imageUrl = window.ArtProxy.getArtImageUrl(art.id);
 
             container.innerHTML = `
                 <div class="feed-card">
-                    <img src="${imageUrl}" alt="${art.art_name}" class="feed-image" onclick="openImage('${imageUrl}')">
+                    <img src="${imageUrl}" alt="${art.art_name || 'Арт'}" class="feed-image" onclick="openImage('${imageUrl}')">
                     <div class="feed-info">
-                        <h2 class="feed-title">${art.art_name || 'Без названия'}</h2>
-                        <p class="feed-caption">${art.caption || 'Без описания'}</p>
+                        <h2 class="feed-title">${escapeHtml(art.art_name || 'Без названия')}</h2>
+                        <p class="feed-caption">${escapeHtml(art.caption || 'Без описания')}</p>
                         
                         <div class="feed-actions">
                             <button class="action-btn">
@@ -763,12 +766,12 @@
             if (arts.length === 0) return;
 
             container.innerHTML = arts.map(art => {
-                const imageUrl = `${API_BASE_URL}/api/arts/${art.id}/image?api_key=${apiKey}`;
+                const imageUrl = window.ArtProxy.getArtImageUrl(art.id);
                 return `
                     <div class="album-card" onclick="openImage('${imageUrl}')">
-                        <img src="${imageUrl}" alt="${art.art_name}" class="album-image">
+                        <img src="${imageUrl}" alt="${escapeHtml(art.art_name || 'Арт')}" class="album-image">
                         <div class="album-info">
-                            <h3 class="album-title">${art.art_name || 'Без названия'}</h3>
+                            <h3 class="album-title">${escapeHtml(art.art_name || 'Без названия')}</h3>
                             <div class="album-stats">
                                 <div class="stat-item">
                                     <i class="fas fa-heart"></i>
@@ -805,7 +808,7 @@
             container.innerHTML = `
                 <div class="loading" style="color: #d32f2f;">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <p>${message}</p>
+                    <p>${escapeHtml(message)}</p>
                 </div>
             `;
         }
@@ -817,16 +820,40 @@
             setTimeout(() => notification.classList.add('hidden'), 3000);
         }
 
+        // Вспомогательная функция для экранирования HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         // Загрузка при старте
-        loadArts();
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ждем загрузки proxy.js
+            setTimeout(() => {
+                if (window.ArtProxy) {
+                    loadArts();
+                } else {
+                    console.error('Proxy не загружен');
+                    showError('Ошибка загрузки прокси');
+                }
+            }, 100);
+        });
 
         // Управление клавишами
         document.addEventListener('keydown', (e) => {
             if (currentView === 'feed') {
                 if (e.key === 'ArrowUp') document.getElementById('prevArt').click();
                 if (e.key === 'ArrowDown') document.getElementById('nextArt').click();
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    document.getElementById('randomArt').click();
+                }
             }
         });
+        
+        // Делаем функции глобальными для использования в onclick
+        window.openImage = openImage;
     </script>
 </body>
 </html>
