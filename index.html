@@ -26,6 +26,7 @@
             color: var(--light);
             overflow: hidden;
             height: 100vh;
+            touch-action: pan-y;
         }
 
         /* Хедер */
@@ -34,13 +35,14 @@
             top: 0;
             left: 0;
             right: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            padding: 12px 20px;
             z-index: 1000;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid rgba(255, 182, 193, 0.2);
         }
 
         .logo {
@@ -62,11 +64,11 @@
             display: flex;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 25px;
-            padding: 5px;
+            padding: 4px;
         }
 
         .view-btn {
-            padding: 8px 20px;
+            padding: 8px 18px;
             border: none;
             background: transparent;
             color: #ccc;
@@ -74,15 +76,20 @@
             border-radius: 20px;
             transition: all 0.3s ease;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
         }
 
         .view-btn.active {
             background: var(--accent);
             color: white;
+            box-shadow: 0 4px 12px rgba(255, 133, 162, 0.3);
         }
 
         .settings-btn {
-            padding: 10px 15px;
+            padding: 9px 14px;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid var(--primary);
             border-radius: 25px;
@@ -96,21 +103,25 @@
             color: white;
         }
 
-        /* TikTok-style вертикальная лента */
+        /* TikTok-style лента - УЛУЧШЕННАЯ */
         .tiktok-feed {
             position: fixed;
-            top: 70px;
+            top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            overflow: hidden;
             background: #000;
+            overflow: hidden;
+            user-select: none;
         }
 
-        .feed-container {
-            position: relative;
+        .feed-scroll-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
             height: 100%;
-            transition: transform 0.5s ease;
+            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         .feed-item {
@@ -133,12 +144,22 @@
             pointer-events: all;
         }
 
+        .feed-item.next {
+            transform: translateY(100%);
+        }
+
+        .feed-item.prev {
+            transform: translateY(-100%);
+        }
+
+        /* Контейнер для изображения - теперь адаптивный */
         .feed-image-container {
             width: 100%;
             height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
+            position: relative;
         }
 
         .feed-image {
@@ -147,37 +168,51 @@
             width: auto;
             height: auto;
             object-fit: contain;
-            border-radius: 0;
             cursor: pointer;
+            transition: transform 0.3s ease;
         }
 
+        .feed-image:hover {
+            transform: scale(1.02);
+        }
+
+        /* Информация поверх изображения */
         .feed-info-overlay {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, transparent 100%);
-            padding: 100px 20px 30px 20px;
+            background: linear-gradient(to top, 
+                rgba(0,0,0,0.95) 0%, 
+                rgba(0,0,0,0.8) 30%, 
+                rgba(0,0,0,0.5) 60%, 
+                transparent 100%);
+            padding: 120px 20px 40px 20px;
+            pointer-events: none;
         }
 
         .feed-title {
-            font-size: 1.8rem;
+            font-size: 1.7rem;
             font-weight: 700;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             color: white;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.7);
         }
 
         .feed-caption {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 25px;
+            max-height: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .feed-stats {
             display: flex;
             gap: 25px;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .stat-item {
@@ -188,82 +223,21 @@
         }
 
         .stat-icon {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             color: var(--accent);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
         }
 
         .stat-value {
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        /* Режим альбома (Grid) */
-        .album-container {
-            margin-top: 70px;
-            padding: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
-            background: #000;
-            min-height: calc(100vh - 70px);
-        }
-
-        .album-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .album-card:hover {
-            transform: scale(1.05);
-            border-color: var(--accent);
-            box-shadow: 0 10px 30px rgba(255, 133, 162, 0.3);
-        }
-
-        .album-image {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-        }
-
-        .album-info {
-            padding: 15px;
-        }
-
-        .album-title {
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: white;
-            margin-bottom: 8px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
         }
 
-        .album-stats {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            color: #aaa;
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        /* Кнопки навигации */
+        /* Кнопки управления на правой стороне */
         .feed-controls {
             position: fixed;
-            right: 20px;
+            right: 15px;
             bottom: 100px;
             display: flex;
             flex-direction: column;
@@ -272,9 +246,9 @@
         }
 
         .feed-btn {
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.1);
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 0, 0, 0.5);
             border: 2px solid var(--primary);
             border-radius: 50%;
             display: flex;
@@ -282,15 +256,16 @@
             justify-content: center;
             cursor: pointer;
             color: var(--accent);
-            font-size: 1.5rem;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
+            font-size: 1.3rem;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            backdrop-filter: blur(10px);
         }
 
         .feed-btn:hover {
             background: var(--accent);
             color: white;
-            transform: scale(1.1);
+            transform: scale(1.15);
+            box-shadow: 0 6px 20px rgba(255, 133, 162, 0.4);
         }
 
         /* Индикатор свайпа */
@@ -300,26 +275,164 @@
             left: 0;
             right: 0;
             text-align: center;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.9rem;
-            z-index: 100;
-            animation: pulse 2s infinite;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            z-index: 90;
+            animation: float 3s infinite ease-in-out;
+            pointer-events: none;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+        .swipe-indicator i {
+            display: block;
+            margin: 5px 0;
+            font-size: 1.2rem;
+            opacity: 0.8;
         }
 
-        /* Модальные окна и уведомления (остаются без изменений) */
-        .settings-modal {
+        @keyframes float {
+            0%, 100% { transform: translateY(0); opacity: 0.7; }
+            50% { transform: translateY(-10px); opacity: 1; }
+        }
+
+        /* Режим альбома (Grid) */
+        .album-container {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-auto-rows: 250px;
+            gap: 20px;
+            overflow-y: auto;
+            background: #000;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .album-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .album-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .album-card:hover {
+            transform: scale(1.05);
+            border-color: var(--accent);
+            box-shadow: 0 12px 30px rgba(255, 133, 162, 0.4);
+        }
+
+        .album-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .album-card:hover .album-image {
+            transform: scale(1.1);
+        }
+
+        .album-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding: 15px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .album-card:hover .album-info {
+            transform: translateY(0);
+        }
+
+        .album-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 5px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .album-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #ddd;
+        }
+
+        /* Индикатор загрузки */
+        .load-more-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 133, 162, 0.3);
+        }
+
+        .load-more-indicator i {
+            animation: spin 1s linear infinite;
+        }
+
+        /* Анимации для свайпа */
+        .swipe-up-animation {
+            animation: swipeUp 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .swipe-down-animation {
+            animation: swipeDown 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        @keyframes swipeUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100%); opacity: 0; }
+        }
+
+        @keyframes swipeDown {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+
+        /* Модальные окна */
+        .settings-modal, .image-modal {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             z-index: 2000;
             align-items: center;
             justify-content: center;
@@ -331,7 +444,13 @@
             padding: 30px;
             max-width: 500px;
             width: 90%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: modalSlideIn 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .settings-header {
@@ -405,42 +524,31 @@
             box-shadow: 0 6px 20px rgba(255, 133, 162, 0.4);
         }
 
-        .image-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.98);
-            z-index: 2500;
-            align-items: center;
-            justify-content: center;
-        }
-
         .modal-image {
             max-width: 95%;
             max-height: 95vh;
             object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
         }
 
         .modal-close {
             position: absolute;
-            top: 30px;
-            right: 30px;
+            top: 20px;
+            right: 20px;
             background: rgba(255, 255, 255, 0.1);
             color: var(--accent);
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 700;
             transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(10px);
         }
 
         .modal-close:hover {
@@ -449,6 +557,7 @@
             transform: rotate(90deg);
         }
 
+        /* Уведомление */
         .notification {
             position: fixed;
             bottom: 30px;
@@ -457,19 +566,20 @@
             color: white;
             padding: 15px 25px;
             border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(255, 133, 162, 0.4);
+            box-shadow: 0 10px 30px rgba(255, 133, 162, 0.5);
             z-index: 3000;
             display: flex;
             align-items: center;
             gap: 10px;
-            animation: slideIn 0.3s ease;
+            animation: slideInRight 0.3s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        @keyframes slideIn {
+        @keyframes slideInRight {
             from { transform: translateX(120%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
 
+        /* Утилиты */
         .hidden {
             display: none !important;
         }
@@ -494,46 +604,61 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Индикатор загрузки новых артов */
-        .load-more-indicator {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 20px 40px;
-            border-radius: 25px;
-            display: none;
-            align-items: center;
-            gap: 15px;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-        }
-
+        /* Адаптивность */
         @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+            
+            .logo {
+                font-size: 1.3rem;
+            }
+            
+            .view-btn {
+                padding: 7px 15px;
+                font-size: 0.85rem;
+            }
+            
+            .feed-title {
+                font-size: 1.4rem;
+            }
+            
+            .feed-caption {
+                font-size: 0.95rem;
+            }
+            
+            .feed-controls {
+                right: 10px;
+                bottom: 90px;
+            }
+            
+            .feed-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1.2rem;
+            }
+            
             .album-container {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                grid-auto-rows: 160px;
                 gap: 15px;
                 padding: 15px;
             }
-
-            .feed-controls {
-                right: 15px;
-                bottom: 80px;
+            
+            .swipe-indicator {
+                font-size: 0.8rem;
+                bottom: 20px;
             }
+        }
 
-            .feed-btn {
-                width: 45px;
-                height: 45px;
+        @media (max-width: 480px) {
+            .album-container {
+                grid-template-columns: repeat(2, 1fr);
+                grid-auto-rows: 150px;
             }
-
-            .feed-title {
-                font-size: 1.5rem;
-            }
-
-            .feed-caption {
-                font-size: 1rem;
+            
+            .feed-info-overlay {
+                padding: 100px 15px 30px 15px;
             }
         }
     </style>
@@ -548,7 +673,7 @@
         <div class="header-controls">
             <div class="view-toggle">
                 <button class="view-btn active" data-view="feed">
-                    <i class="fas fa-play-circle"></i> Лента
+                    <i class="fas fa-play"></i> Лента
                 </button>
                 <button class="view-btn" data-view="album">
                     <i class="fas fa-th"></i> Альбом
@@ -563,20 +688,19 @@
     <!-- TikTok-style лента -->
     <div id="tiktokFeed" class="tiktok-feed">
         <div class="swipe-indicator">
-            <i class="fas fa-chevron-up"></i> Свайпай вверх/вниз <i class="fas fa-chevron-down"></i>
+            <i class="fas fa-chevron-up"></i>
+            Свайпай вверх/вниз
+            <i class="fas fa-chevron-down"></i>
         </div>
         <div class="feed-controls">
             <button class="feed-btn" id="randomArt" title="Случайный арт">
                 <i class="fas fa-random"></i>
             </button>
-            <button class="feed-btn" id="toggleSound" title="Звук">
-                <i class="fas fa-volume-up"></i>
-            </button>
             <button class="feed-btn" id="shareArt" title="Поделиться">
                 <i class="fas fa-share-alt"></i>
             </button>
         </div>
-        <div class="feed-container" id="feedContainer">
+        <div class="feed-scroll-container" id="feedScrollContainer">
             <!-- Арты загружаются динамически -->
         </div>
     </div>
@@ -609,7 +733,7 @@
                 <label for="limitInput">
                     <i class="fas fa-image"></i> Количество артов для загрузки
                 </label>
-                <input type="number" id="limitInput" class="settings-input" value="20" min="5" max="100">
+                <input type="number" id="limitInput" class="settings-input" value="30" min="10" max="100">
             </div>
             
             <button class="btn-primary" id="saveSettings">
@@ -638,137 +762,196 @@
     <script src="proxy.js"></script>
     
     <script>
+        // Глобальные переменные
         let currentView = 'feed';
-        let allArts = []; // Все загруженные арты
-        let usedArts = new Set(); // ID уже показанных артов
-        let currentArtIndex = 0;
+        let allArts = [];
+        let usedArts = new Set();
+        let currentIndex = 0;
         let apiKey = localStorage.getItem('loli_api_key') || 'bfd863c403dc5af6c02bd0ec3ea243c0';
-        let limit = parseInt(localStorage.getItem('loli_limit')) || 20;
+        let limit = parseInt(localStorage.getItem('loli_limit')) || 30;
         let isLoading = false;
         let touchStartY = 0;
         let touchEndY = 0;
+        let isSwiping = false;
+        let feedItems = [];
+        let feedContainer, albumContainer;
 
-        // Инициализация
-        document.getElementById('apiKeyInput').value = apiKey;
-        document.getElementById('limitInput').value = limit;
+        // Инициализация DOM элементов
+        document.addEventListener('DOMContentLoaded', () => {
+            feedContainer = document.getElementById('feedScrollContainer');
+            albumContainer = document.getElementById('albumContainer');
+            
+            document.getElementById('apiKeyInput').value = apiKey;
+            document.getElementById('limitInput').value = limit;
+            
+            initEventListeners();
+            loadArts();
+        });
 
-        // Переключение видов
-        document.querySelectorAll('.view-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentView = btn.dataset.view;
-                switchView();
+        // Инициализация обработчиков событий
+        function initEventListeners() {
+            // Переключение видов
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentView = btn.dataset.view;
+                    switchView();
+                });
             });
-        });
 
-        // Модальные окна
-        document.getElementById('settingsBtn').addEventListener('click', () => {
-            document.getElementById('settingsModal').style.display = 'flex';
-        });
+            // Модальные окна
+            document.getElementById('settingsBtn').addEventListener('click', () => {
+                document.getElementById('settingsModal').style.display = 'flex';
+            });
 
-        document.getElementById('closeSettings').addEventListener('click', () => {
-            document.getElementById('settingsModal').style.display = 'none';
-        });
+            document.getElementById('closeSettings').addEventListener('click', () => {
+                document.getElementById('settingsModal').style.display = 'none';
+            });
 
-        document.getElementById('saveSettings').addEventListener('click', async () => {
-            apiKey = document.getElementById('apiKeyInput').value.trim();
-            limit = parseInt(document.getElementById('limitInput').value);
-            
-            localStorage.setItem('loli_api_key', apiKey);
-            localStorage.setItem('loli_limit', limit);
-            
-            document.getElementById('settingsModal').style.display = 'none';
-            showNotification('Настройки сохранены!');
-            await loadArts();
-        });
+            document.getElementById('saveSettings').addEventListener('click', async () => {
+                apiKey = document.getElementById('apiKeyInput').value.trim();
+                limit = parseInt(document.getElementById('limitInput').value);
+                
+                localStorage.setItem('loli_api_key', apiKey);
+                localStorage.setItem('loli_limit', limit);
+                
+                document.getElementById('settingsModal').style.display = 'none';
+                showNotification('Настройки сохранены!');
+                await loadArts();
+            });
 
-        // Модальное окно изображения
-        document.getElementById('closeImage').addEventListener('click', () => {
-            document.getElementById('imageModal').style.display = 'none';
-        });
-
-        document.getElementById('imageModal').addEventListener('click', (e) => {
-            if (e.target.id === 'imageModal') {
+            // Модальное окно изображения
+            document.getElementById('closeImage').addEventListener('click', () => {
                 document.getElementById('imageModal').style.display = 'none';
-            }
-        });
+            });
 
-        // Кнопки управления
-        document.getElementById('randomArt').addEventListener('click', () => {
-            showRandomArt();
-        });
-
-        // Свайп для TikTok ленты
-        document.getElementById('feedContainer').addEventListener('touchstart', (e) => {
-            touchStartY = e.changedTouches[0].screenY;
-        });
-
-        document.getElementById('feedContainer').addEventListener('touchend', (e) => {
-            touchEndY = e.changedTouches[0].screenY;
-            handleSwipe();
-        });
-
-        // Клавиши для десктопа
-        document.addEventListener('keydown', (e) => {
-            if (currentView === 'feed') {
-                if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
-                    e.preventDefault();
-                    showPreviousArt();
+            document.getElementById('imageModal').addEventListener('click', (e) => {
+                if (e.target.id === 'imageModal') {
+                    document.getElementById('imageModal').style.display = 'none';
                 }
-                if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S' || e.key === ' ') {
-                    e.preventDefault();
-                    showNextArt();
+            });
+
+            // Кнопки управления
+            document.getElementById('randomArt').addEventListener('click', () => {
+                showRandomArt();
+            });
+
+            // Свайп для TikTok ленты
+            feedContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+            feedContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+            feedContainer.addEventListener('touchend', handleTouchEnd);
+
+            // Клавиши для десктопа
+            document.addEventListener('keydown', (e) => {
+                if (currentView === 'feed') {
+                    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                        e.preventDefault();
+                        showPreviousArt();
+                    }
+                    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S' || e.key === ' ') {
+                        e.preventDefault();
+                        showNextArt();
+                    }
+                    if (e.key === 'r' || e.key === 'R') {
+                        e.preventDefault();
+                        showRandomArt();
+                    }
                 }
-                if (e.key === 'r' || e.key === 'R') {
-                    e.preventDefault();
-                    showRandomArt();
-                }
-            }
-        });
+            });
 
-        // Колесо мыши
-        document.getElementById('feedContainer').addEventListener('wheel', (e) => {
-            e.preventDefault();
-            if (e.deltaY > 0) {
-                showNextArt();
-            } else {
-                showPreviousArt();
-            }
-        });
-
-        // Функция свайпа
-        function handleSwipe() {
-            const swipeThreshold = 50;
-            const swipeDistance = touchStartY - touchEndY;
-
-            if (Math.abs(swipeDistance) > swipeThreshold) {
-                if (swipeDistance > 0) {
-                    // Свайп вверх - следующий арт
+            // Колесо мыши
+            feedContainer.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                if (e.deltaY > 0) {
                     showNextArt();
                 } else {
-                    // Свайп вниз - предыдущий арт
                     showPreviousArt();
                 }
+            }, { passive: false });
+
+            // Бесконечная прокрутка для альбома
+            albumContainer.addEventListener('scroll', () => {
+                if (albumContainer.scrollTop + albumContainer.clientHeight >= albumContainer.scrollHeight - 100) {
+                    loadMoreArts();
+                }
+            });
+        }
+
+        // Обработчики свайпа
+        function handleTouchStart(e) {
+            if (isSwiping) return;
+            touchStartY = e.touches[0].clientY;
+            isSwiping = true;
+        }
+
+        function handleTouchMove(e) {
+            if (!isSwiping) return;
+            e.preventDefault();
+            touchEndY = e.touches[0].clientY;
+            
+            // Плавное движение при свайпе
+            const delta = (touchEndY - touchStartY) * 0.5;
+            feedContainer.style.transform = `translateY(${delta}px)`;
+        }
+
+        function handleTouchEnd() {
+            if (!isSwiping) return;
+            
+            const delta = touchEndY - touchStartY;
+            const threshold = 80;
+            
+            if (Math.abs(delta) > threshold) {
+                if (delta > 0) {
+                    // Свайп вниз - предыдущий арт
+                    animateSwipe('down');
+                    setTimeout(() => showPreviousArt(), 200);
+                } else {
+                    // Свайп вверх - следующий арт
+                    animateSwipe('up');
+                    setTimeout(() => showNextArt(), 200);
+                }
             }
+            
+            // Возвращаем на место
+            feedContainer.style.transform = 'translateY(0)';
+            feedContainer.style.transition = 'transform 0.3s ease';
+            setTimeout(() => {
+                feedContainer.style.transition = 'transform 0.4s cubic-bezier(0.23, 1, 0.32, 1)';
+            }, 300);
+            
+            isSwiping = false;
+        }
+
+        // Анимация свайпа
+        function animateSwipe(direction) {
+            const activeItem = document.querySelector('.feed-item.active');
+            if (!activeItem) return;
+            
+            activeItem.classList.add(direction === 'up' ? 'swipe-up-animation' : 'swipe-down-animation');
+            setTimeout(() => {
+                activeItem.classList.remove('swipe-up-animation', 'swipe-down-animation');
+            }, 500);
         }
 
         // Загрузка артов
         async function loadArts() {
             try {
-                showLoading();
+                showFeedLoading();
                 allArts = [];
                 usedArts.clear();
+                currentIndex = 0;
+                
+                if (!window.ArtProxy) {
+                    throw new Error('Proxy не загружен');
+                }
                 
                 const data = await window.ArtProxy.getArts(limit, 0);
                 
                 if (data.arts && data.arts.length > 0) {
-                    allArts = data.arts;
+                    allArts = shuffleArray(data.arts);
+                    usedArts.clear();
                     
-                    // Перемешиваем арты для случайного порядка
-                    shuffleArray(allArts);
-                    
-                    // В режиме ленты показываем первый арт
                     if (currentView === 'feed') {
                         showRandomArt();
                     } else {
@@ -787,146 +970,133 @@
 
         // Загрузка дополнительных артов
         async function loadMoreArts() {
-            if (isLoading) return;
+            if (isLoading || allArts.length === 0) return;
             
             try {
                 isLoading = true;
-                document.getElementById('loadMoreIndicator').style.display = 'flex';
+                showLoadMoreIndicator();
                 
                 const offset = allArts.length;
                 const data = await window.ArtProxy.getArts(limit, offset);
                 
                 if (data.arts && data.arts.length > 0) {
                     // Добавляем новые арты и перемешиваем
-                    allArts = [...allArts, ...data.arts];
-                    shuffleArray(allArts);
+                    const newArts = shuffleArray(data.arts);
+                    allArts = [...allArts, ...newArts];
                     
                     if (currentView === 'feed') {
-                        // Показываем случайный арт из новых
-                        const newArts = data.arts.filter(art => !usedArts.has(art.id));
-                        if (newArts.length > 0) {
-                            showArt(getRandomArt());
-                        }
+                        showNotification(`Загружены новые арты (+${newArts.length})`);
                     } else {
                         displayAlbum();
                     }
-                    
-                    showNotification(`Загружены новые арты (+${data.arts.length})`);
                 } else {
                     showNotification('Больше артов нет');
                 }
             } catch (error) {
                 console.error('Ошибка загрузки:', error);
-                showError(`Ошибка: ${error.message}`);
             } finally {
                 isLoading = false;
-                document.getElementById('loadMoreIndicator').style.display = 'none';
+                hideLoadMoreIndicator();
             }
-        }
-
-        // Показать предыдущий арт
-        function showPreviousArt() {
-            if (allArts.length === 0) return;
-            
-            // Ищем предыдущий непоказанный арт
-            let attempts = 0;
-            let art;
-            do {
-                art = getRandomArt();
-                attempts++;
-            } while (usedArts.has(art.id) && attempts < 100);
-            
-            showArt(art);
-        }
-
-        // Показать следующий арт
-        function showNextArt() {
-            if (allArts.length === 0) return;
-            
-            // Если показано много артов, загружаем новые
-            if (usedArts.size >= allArts.length * 0.7) {
-                loadMoreArts();
-            }
-            
-            // Ищем следующий непоказанный арт
-            let attempts = 0;
-            let art;
-            do {
-                art = getRandomArt();
-                attempts++;
-            } while (usedArts.has(art.id) && attempts < 100);
-            
-            showArt(art);
         }
 
         // Показать случайный арт
         function showRandomArt() {
             if (allArts.length === 0) return;
             
-            const art = getRandomArt();
+            // Находим непоказанный арт
+            const availableArts = allArts.filter(art => !usedArts.has(art.id));
+            
+            if (availableArts.length === 0) {
+                // Все арты показаны, загружаем новые
+                usedArts.clear();
+                return showRandomArt();
+            }
+            
+            const randomIndex = Math.floor(Math.random() * availableArts.length);
+            const art = availableArts[randomIndex];
             showArt(art);
         }
 
-        // Получить случайный арт
-        function getRandomArt() {
-            if (allArts.length === 0) return null;
-            
-            // Если много артов уже показано, загружаем новые
-            if (usedArts.size >= allArts.length * 0.8) {
-                setTimeout(loadMoreArts, 1000);
-            }
-            
-            const randomIndex = Math.floor(Math.random() * allArts.length);
-            return allArts[randomIndex];
-        }
-
-        // Показать арт
+        // Показать арт в ленте
         function showArt(art) {
             if (!art) return;
             
             usedArts.add(art.id);
             const imageUrl = window.ArtProxy.getArtImageUrl(art.id);
             
-            const container = document.getElementById('feedContainer');
-            container.innerHTML = `
-                <div class="feed-item active">
-                    <div class="feed-image-container" onclick="openImage('${imageUrl}')">
-                        <img src="${imageUrl}" alt="${escapeHtml(art.art_name || 'Арт')}" class="feed-image">
-                    </div>
-                    <div class="feed-info-overlay">
-                        <h2 class="feed-title">${escapeHtml(art.art_name || 'Без названия')}</h2>
-                        <p class="feed-caption">${escapeHtml(art.caption || 'Без описания')}</p>
-                        <div class="feed-stats">
-                            <div class="stat-item">
-                                <i class="fas fa-heart stat-icon"></i>
-                                <span class="stat-value">${art.stats?.likes || 0}</span>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-eye stat-icon"></i>
-                                <span class="stat-value">${art.stats?.views || 0}</span>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-comment stat-icon"></i>
-                                <span class="stat-value">${art.stats?.comments || 0}</span>
-                            </div>
+            // Очищаем контейнер и добавляем новый арт
+            feedContainer.innerHTML = '';
+            
+            const artElement = document.createElement('div');
+            artElement.className = 'feed-item active';
+            artElement.innerHTML = `
+                <div class="feed-image-container" onclick="openImage('${imageUrl}')">
+                    <img src="${imageUrl}" alt="${escapeHtml(art.art_name || 'Арт')}" 
+                         class="feed-image" 
+                         onload="this.style.opacity='1'"
+                         style="opacity:0;transition:opacity 0.3s">
+                </div>
+                <div class="feed-info-overlay">
+                    <h2 class="feed-title">${escapeHtml(art.art_name || 'Без названия')}</h2>
+                    <p class="feed-caption">${escapeHtml(art.caption || 'Без описания')}</p>
+                    <div class="feed-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-heart stat-icon"></i>
+                            <span class="stat-value">${art.stats?.likes || 0}</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-eye stat-icon"></i>
+                            <span class="stat-value">${art.stats?.views || 0}</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-comment stat-icon"></i>
+                            <span class="stat-value">${art.stats?.comments || 0}</span>
                         </div>
                     </div>
                 </div>
             `;
+            
+            feedContainer.appendChild(artElement);
+            
+            // Если осталось мало непоказанных артов, предзагружаем новые
+            if (usedArts.size >= allArts.length * 0.7) {
+                setTimeout(loadMoreArts, 500);
+            }
+        }
+
+        // Показать следующий арт
+        function showNextArt() {
+            if (allArts.length === 0) return;
+            
+            if (usedArts.size >= allArts.length * 0.8) {
+                loadMoreArts();
+            }
+            
+            setTimeout(() => showRandomArt(), 50);
+        }
+
+        // Показать предыдущий арт
+        function showPreviousArt() {
+            // В случайном режиме предыдущий - тоже случайный
+            showRandomArt();
         }
 
         // Отображение альбома
         function displayAlbum() {
-            const container = document.getElementById('albumContainer');
+            if (allArts.length === 0) return;
             
-            // Перемешиваем арты для случайного порядка
-            const shuffledArts = [...allArts].sort(() => Math.random() - 0.5);
+            // Перемешиваем арты
+            const shuffledArts = shuffleArray([...allArts]);
             
-            container.innerHTML = shuffledArts.map(art => {
+            albumContainer.innerHTML = shuffledArts.map(art => {
                 const imageUrl = window.ArtProxy.getArtImageUrl(art.id);
                 return `
                     <div class="album-card" onclick="openImage('${imageUrl}')">
-                        <img src="${imageUrl}" alt="${escapeHtml(art.art_name || 'Арт')}" class="album-image">
+                        <img src="${imageUrl}" alt="${escapeHtml(art.art_name || 'Арт')}" 
+                             class="album-image"
+                             onload="this.style.opacity='1'"
+                             style="opacity:0;transition:opacity 0.3s">
                         <div class="album-info">
                             <h3 class="album-title">${escapeHtml(art.art_name || 'Без названия')}</h3>
                             <div class="album-stats">
@@ -943,40 +1113,29 @@
                     </div>
                 `;
             }).join('');
-            
-            // Добавляем обработчик бесконечной прокрутки для альбома
-            if (!container.dataset.scrollListener) {
-                container.addEventListener('scroll', () => {
-                    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 100) {
-                        if (!isLoading) {
-                            loadMoreArts();
-                        }
-                    }
-                });
-                container.dataset.scrollListener = 'true';
-            }
         }
 
         // Переключение вида
         function switchView() {
             if (currentView === 'feed') {
                 document.getElementById('tiktokFeed').classList.remove('hidden');
-                document.getElementById('albumContainer').classList.add('hidden');
+                albumContainer.classList.add('hidden');
                 showRandomArt();
             } else {
                 document.getElementById('tiktokFeed').classList.add('hidden');
-                document.getElementById('albumContainer').classList.remove('hidden');
+                albumContainer.classList.remove('hidden');
                 displayAlbum();
             }
         }
 
         // Вспомогательные функции
         function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
             }
-            return array;
+            return newArray;
         }
 
         function openImage(url) {
@@ -984,8 +1143,8 @@
             document.getElementById('imageModal').style.display = 'flex';
         }
 
-        function showLoading() {
-            document.getElementById('feedContainer').innerHTML = `
+        function showFeedLoading() {
+            feedContainer.innerHTML = `
                 <div class="loading">
                     <i class="fas fa-spinner"></i>
                     <p>Загрузка артов...</p>
@@ -993,8 +1152,16 @@
             `;
         }
 
+        function showLoadMoreIndicator() {
+            document.getElementById('loadMoreIndicator').style.display = 'flex';
+        }
+
+        function hideLoadMoreIndicator() {
+            document.getElementById('loadMoreIndicator').style.display = 'none';
+        }
+
         function showError(message) {
-            document.getElementById('feedContainer').innerHTML = `
+            feedContainer.innerHTML = `
                 <div class="loading" style="color: #ff6b6b;">
                     <i class="fas fa-exclamation-triangle"></i>
                     <p>${escapeHtml(message)}</p>
@@ -1014,18 +1181,6 @@
             div.textContent = text;
             return div.innerHTML;
         }
-
-        // Загрузка при старте
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                if (window.ArtProxy) {
-                    loadArts();
-                } else {
-                    console.error('Proxy не загружен');
-                    showError('Ошибка загрузки прокси');
-                }
-            }, 100);
-        });
 
         // Делаем функции глобальными
         window.openImage = openImage;
