@@ -454,7 +454,7 @@
 
     <script>
         // Вместо window.location.origin
-        const API_BASE_URL = "http://64.188.67.171:3000"; // Явно укажите порт 3000 // Используем текущий домен
+        const API_BASE_URL = "/.netlify/functions/proxy"; // Относительный путь
         let currentApiKey = localStorage.getItem('loli_api_key') || 'bfd863c403dc5af6c02bd0ec3ea243c0';
         let currentPage = 1;
         let currentLimit = 10;
@@ -742,4 +742,5 @@
         });
     </script>
 </body>
+
 </html>
