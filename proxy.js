@@ -1,116 +1,195 @@
-// proxy.js - РАБОЧАЯ ВЕРСИЯ
+// proxy.js - ИСПРАВЛЕННАЯ ВЕРСИЯ ДЛЯ GITHUB PAGES
 const API_BASE_URL = 'http://64.188.67.171:3000';
+
+// Список проверенных рабочих прокси
+const PROXY_SERVERS = [
+    {
+        name: 'cors-anywhere',
+        url: 'https://cors-anywhere.herokuapp.com/',
+        needsActivation: true,
+        activationUrl: 'https://cors-anywhere.herokuapp.com/corsdemo'
+    },
+    {
+        name: 'codetabs',
+        url: 'https://api.codetabs.com/v1/proxy?quest=',
+        needsActivation: false
+    },
+    {
+        name: 'corsproxy',
+        url: 'https://corsproxy.org/?',
+        needsActivation: false
+    }
+];
+
+let currentProxyIndex = 0;
 
 async function proxyRequest(endpoint, options = {}) {
     const apiKey = localStorage.getItem('loli_api_key') || 'bfd863c403dc5af6c02bd0ec3ea243c0';
+    const proxy = PROXY_SERVERS[currentProxyIndex];
     
-    // ПРОВЕРЕННЫЕ РАБОЧИЕ ПРОКСИ для GitHub Pages:
-    const WORKING_PROXIES = [
-        // 1. CORS Anywhere (нужно нажать кнопку активации один раз)
-        // Откройте: https://cors-anywhere.herokuapp.com/corsdemo
-        // Нажмите "Request temporary access to the demo server"
-        // Затем используйте этот прокси:
-        'https://cors-anywhere.herokuapp.com/',
-        
-        // 2. Альтернативный CORS прокси
-        'https://api.codetabs.com/v1/proxy?quest=',
-        
-        // 3. Прокси с поддержкой всех заголовков
-        'https://corsproxy.org/?',
-        
-        // 4. Простой прокси
-        'https://thingproxy.freeboard.io/fetch/'
-    ];
+    console.log(`Using proxy: ${proxy.name}`);
     
-    const PROXY = WORKING_PROXIES[0]; // Начните с первого
+    // Формируем полный URL API
+    const targetUrl = API_BASE_URL + endpoint;
+    let finalUrl;
     
-    // Формируем URL
-    let url;
     if (window.location.protocol === 'https:') {
         // Для HTTPS страниц используем прокси
-        const targetUrl = API_BASE_URL + endpoint;
-        
-        if (PROXY === 'https://cors-anywhere.herokuapp.com/') {
-            url = PROXY + targetUrl;
-        } else if (PROXY.includes('?')) {
-            url = PROXY + encodeURIComponent(targetUrl);
+        if (proxy.url.includes('?')) {
+            finalUrl = proxy.url + encodeURIComponent(targetUrl);
         } else {
-            url = PROXY + targetUrl;
+            finalUrl = proxy.url + targetUrl;
         }
     } else {
         // Для HTTP страниц прямой запрос
-        url = API_BASE_URL + endpoint;
+        finalUrl = targetUrl;
     }
     
-    console.log('Using proxy:', PROXY);
-    console.log('Request URL:', url);
+    console.log('Request URL:', finalUrl);
+    
+    // Подготавливаем заголовки
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+    };
+    
+    // Добавляем API ключ в заголовки, но не для всех прокси
+    if (!proxy.url.includes('corsproxy.org')) {
+        headers['X-API-Key'] = apiKey;
+    }
+    
+    // Особые заголовки для cors-anywhere
+    if (proxy.name === 'cors-anywhere') {
+        headers['X-Requested-With'] = 'XMLHttpRequest';
+    }
     
     try {
-        // Подготавливаем заголовки
-        const headers = {
-            'X-API-Key': apiKey,
-            'Content-Type': 'application/json',
-            ...options.headers
-        };
-        
-        // Особый случай для cors-anywhere
-        if (PROXY === 'https://cors-anywhere.herokuapp.com/') {
-            headers['X-Requested-With'] = 'XMLHttpRequest';
-            headers['Origin'] = window.location.origin;
-        }
-        
-        const response = await fetch(url, {
-            method: 'GET',
+        const response = await fetch(finalUrl, {
+            method: options.method || 'GET',
             headers: headers,
-            mode: 'cors'
+            mode: 'cors',
+            cache: 'no-cache'
         });
         
+        // Если прокси требует активации
+        if (response.status === 401 && proxy.needsActivation) {
+            showProxyActivationNotice(proxy.activationUrl);
+            throw new Error(`Proxy requires activation. Please visit: ${proxy.activationUrl}`);
+        }
+        
+        // Если прокси не работает, пробуем следующий
         if (!response.ok) {
-            const text = await response.text();
-            console.error('Response error:', response.status, text.slice(0, 200));
+            console.warn(`Proxy ${proxy.name} failed with status ${response.status}`);
             
-            // Если прокси не работает, пробуем следующий
-            if (response.status === 403 || response.status === 401) {
-                console.log('Trying next proxy...');
-                // Здесь можно реализовать переключение на следующий прокси
-                return await tryNextProxy(endpoint, options);
+            if (currentProxyIndex < PROXY_SERVERS.length - 1) {
+                currentProxyIndex++;
+                console.log(`Trying next proxy: ${PROXY_SERVERS[currentProxyIndex].name}`);
+                return await proxyRequest(endpoint, options);
             }
             
-            throw new Error(`HTTP ${response.status}: ${text.slice(0, 100)}`);
+            throw new Error(`All proxies failed. Last status: ${response.status}`);
         }
         
         return await response.json();
+        
     } catch (error) {
-        console.error('Fetch error:', error.message);
+        console.error(`Proxy ${proxy.name} error:`, error.message);
+        
+        // Пробуем следующий прокси
+        if (currentProxyIndex < PROXY_SERVERS.length - 1) {
+            currentProxyIndex++;
+            console.log(`Switching to proxy: ${PROXY_SERVERS[currentProxyIndex].name}`);
+            return await proxyRequest(endpoint, options);
+        }
+        
         throw error;
     }
 }
 
-// Функция для переключения прокси
-let currentProxyIndex = 0;
-async function tryNextProxy(endpoint, options) {
-    currentProxyIndex = (currentProxyIndex + 1) % WORKING_PROXIES.length;
-    console.log('Switching to proxy:', WORKING_PROXIES[currentProxyIndex]);
-    return await proxyRequest(endpoint, options);
+// Функция для показа уведомления об активации прокси
+function showProxyActivationNotice(url) {
+    const notice = document.createElement('div');
+    notice.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #ff6b6b;
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        z-index: 9999;
+        max-width: 300px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    `;
+    
+    notice.innerHTML = `
+        <strong>Внимание!</strong>
+        <p>Для работы прокси требуется активация.</p>
+        <a href="${url}" target="_blank" style="color: white; text-decoration: underline;">
+            Нажмите здесь для активации
+        </a>
+        <p style="font-size: 12px; margin-top: 10px;">
+            После активации обновите страницу
+        </p>
+    `;
+    
+    document.body.appendChild(notice);
+    
+    // Автоматическое удаление через 30 секунд
+    setTimeout(() => {
+        if (notice.parentNode) {
+            notice.parentNode.removeChild(notice);
+        }
+    }, 30000);
 }
 
+// Специальная функция для изображений
+function getProxiedImageUrl(artId) {
+    const apiKey = localStorage.getItem('loli_api_key') || 'bfd863c403dc5af6c02bd0ec3ea243c0';
+    const imageUrl = `${API_BASE_URL}/api/arts/${artId}/image?api_key=${apiKey}`;
+    
+    // Для HTTPS страниц используем прокси для изображений
+    if (window.location.protocol === 'https:') {
+        // Используем images.weserv.nl - надежный прокси для изображений
+        return `https://images.weserv.nl/?url=${encodeURIComponent(
+            imageUrl.replace('http://', '')
+        )}&w=1200&h=800&fit=cover&output=webp`;
+    }
+    
+    return imageUrl;
+}
+
+// Экспортируем функции
 window.ArtProxy = {
     getArts: async (limit = 10, offset = 0) => {
         return await proxyRequest(`/api/arts?limit=${limit}&offset=${offset}`);
     },
     
-    getArtImageUrl: (artId) => {
-        const apiKey = localStorage.getItem('loli_api_key') || 'bfd863c403dc5af6c02bd0ec3ea243c0';
-        
-        // Для изображений используем специальный прокси
-        if (window.location.protocol === 'https:') {
-            // Прокси для изображений, который точно работает
-            const imageUrl = `${API_BASE_URL}/api/arts/${artId}/image?api_key=${apiKey}`;
-            return `https://images.weserv.nl/?url=${encodeURIComponent(
-                imageUrl.replace('http://', '')
-            )}&w=1200&h=800&fit=cover`;
-        } else {
-            return `${API_BASE_URL}/api/arts/${artId}/image?api_key=${apiKey}`;
-        }
+    getRandomArt: async () => {
+        return await proxyRequest('/api/arts/random');
+    },
+    
+    getArtImageUrl: getProxiedImageUrl,
+    
+    getArtById: async (artId) => {
+        return await proxyRequest(`/api/arts/${artId}`);
+    },
+    
+    getStats: async () => {
+        return await proxyRequest('/api/stats');
+    },
+    
+    // Функция для ручного переключения прокси
+    switchProxy: () => {
+        currentProxyIndex = (currentProxyIndex + 1) % PROXY_SERVERS.length;
+        console.log(`Switched to proxy: ${PROXY_SERVERS[currentProxyIndex].name}`);
+        return PROXY_SERVERS[currentProxyIndex].name;
+    },
+    
+    // Получить текущий прокси
+    getCurrentProxy: () => {
+        return PROXY_SERVERS[currentProxyIndex];
     }
 };
+
+console.log('ArtProxy loaded. Current proxy:', PROXY_SERVERS[currentProxyIndex].name);
