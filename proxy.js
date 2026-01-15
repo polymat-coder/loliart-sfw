@@ -1,72 +1,55 @@
 // proxy.js
 const API_BASE_URL = 'http://64.188.67.171:3000';
 
-// JSONP для API запросов
-async function jsonpProxy(endpoint) {
-    return new Promise((resolve, reject) => {
+async function proxyRequest(endpoint, options = {}) {
+    try {
         const apiKey = localStorage.getItem('loli_api_key') || 'bfd863c403dc5af6c02bd0ec3ea243c0';
-        const callbackName = 'jsonp_callback_' + Date.now();
         
-        // Создаем endpoint с JSONP callback
-        const jsonpEndpoint = `${endpoint}${endpoint.includes('?') ? '&' : '?'}api_key=${apiKey}&callback=${callbackName}`;
-        const fullUrl = API_BASE_URL + jsonpEndpoint;
+        let url;
+        const targetUrl = API_BASE_URL + endpoint;
         
-        // Создаем script тег
-        const script = document.createElement('script');
-        script.src = fullUrl;
-        
-        // Добавляем callback функцию в window
-        window[callbackName] = (data) => {
-            delete window[callbackName];
-            document.body.removeChild(script);
-            resolve(data);
-        };
-        
-        script.onerror = () => {
-            delete window[callbackName];
-            document.body.removeChild(script);
-            reject(new Error('JSONP request failed'));
-        };
-        
-        document.body.appendChild(script);
-    });
-}
-
-// Для изображений используем простой прокси
-function getProxyImageUrl(url) {
-    // Используем публичный прокси для изображений
-    return `https://images.weserv.nl/?url=${encodeURIComponent(url.replace('http://', ''))}`;
-}
-
-window.ArtProxy = {
-    getArts: async (limit = 10, offset = 0) => {
-        try {
-            // Пробуем JSONP если на HTTPS
-            if (window.location.protocol === 'https:') {
-                return await jsonpProxy(`/api/arts?limit=${limit}&offset=${offset}`);
-            } else {
-                // Прямой запрос для HTTP
-                const apiKey = localStorage.getItem('loli_api_key') || 'bfd863c403dc5af6c02bd0ec3ea243c0';
-                const response = await fetch(`${API_BASE_URL}/api/arts?limit=${limit}&offset=${offset}`, {
-                    headers: { 'X-API-Key': apiKey }
-                });
-                return await response.json();
-            }
-        } catch (error) {
-            console.error('Failed to fetch arts:', error);
-            throw error;
-        }
-    },
-    
-    getArtImageUrl: (artId) => {
-        const apiKey = localStorage.getItem('loli_api_key') || 'bfd863c403dc5af6c02bd0ec3ea243c0';
-        const imageUrl = `${API_BASE_URL}/api/arts/${artId}/image?api_key=${apiKey}`;
-        
-        // Для HTTPS страниц используем прокси для изображений
         if (window.location.protocol === 'https:') {
-            return getProxyImageUrl(imageUrl);
+            // Вариант 1: Прокси с поддержкой Host header
+            // Используйте любой из этих
+            const proxies = [
+                'https://cors-proxy.htmldriven.com/?url=',
+                'https://proxy.cors.sh/',
+                'https://corsproxy.org/?',
+                'https://api.allorigins.win/raw?url='
+            ];
+            
+            const proxy = proxies[0]; // Первый обычно работает
+            url = proxy + encodeURIComponent(targetUrl);
+            
+            // Для proxy.cors.sh нужен специальный формат
+            // url = 'https://proxy.cors.sh/' + targetUrl;
+            
+        } else {
+            url = targetUrl;
         }
         
-        return imageUrl;
+        console.log('Proxy request to:', url);
+        
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                'X-API-Key': apiKey,
+                'Content-Type': 'application/json',
+                // Добавляем Host header если прокси его пропускает
+                'Host': '64.188.67.171:3000',
+                ...options.headers
+            }
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Proxy error:', response.status, errorText);
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Proxy request failed:', error);
+        throw error;
     }
-};
+}
