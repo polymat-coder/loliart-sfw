@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍬 Loli Art Gallery</title>
+    <title>🍬 Loli Art</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Все ваши стили остаются без изменений */
         * {
             margin: 0;
             padding: 0;
@@ -23,9 +22,10 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #fff9fb 0%, #ffeef2 100%);
-            color: var(--dark);
-            overflow-x: hidden;
+            background: #000;
+            color: var(--light);
+            overflow: hidden;
+            height: 100vh;
         }
 
         /* Хедер */
@@ -34,11 +34,10 @@
             top: 0;
             left: 0;
             right: 0;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(10px);
             padding: 15px 20px;
             z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -61,17 +60,16 @@
 
         .view-toggle {
             display: flex;
-            background: white;
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 25px;
             padding: 5px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .view-btn {
             padding: 8px 20px;
             border: none;
             background: transparent;
-            color: #666;
+            color: #ccc;
             cursor: pointer;
             border-radius: 20px;
             transition: all 0.3s ease;
@@ -85,7 +83,7 @@
 
         .settings-btn {
             padding: 10px 15px;
-            background: white;
+            background: rgba(255, 255, 255, 0.1);
             border: 2px solid var(--primary);
             border-radius: 25px;
             cursor: pointer;
@@ -98,122 +96,139 @@
             color: white;
         }
 
-        /* Режим ленты (TikTok style) */
+        /* TikTok-style вертикальная лента */
+        .tiktok-feed {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            background: #000;
+        }
+
         .feed-container {
-            margin-top: 70px;
+            position: relative;
+            height: 100%;
+            transition: transform 0.5s ease;
+        }
+
+        .feed-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
+            justify-content: center;
             align-items: center;
-            padding: 20px;
-            gap: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
         }
 
-        .feed-card {
+        .feed-item.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .feed-image-container {
             width: 100%;
-            max-width: 500px;
-            background: white;
-            border-radius: 25px;
-            overflow: hidden;
-            box-shadow: 0 8px 25px rgba(255, 182, 193, 0.3);
-            position: relative;
-            transition: transform 0.3s ease;
-        }
-
-        .feed-card:hover {
-            transform: scale(1.02);
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .feed-image {
-            width: 100%;
-            height: 600px;
-            object-fit: cover;
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 0;
             cursor: pointer;
         }
 
-        .feed-info {
-            padding: 20px;
-            background: linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,0.98) 100%);
+        .feed-info-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, transparent 100%);
+            padding: 100px 20px 30px 20px;
         }
 
         .feed-title {
-            font-size: 1.4rem;
+            font-size: 1.8rem;
             font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            color: white;
         }
 
         .feed-caption {
-            color: #666;
-            font-size: 1rem;
+            font-size: 1.1rem;
             line-height: 1.6;
-            margin-bottom: 15px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 20px;
         }
 
-        .feed-actions {
+        .feed-stats {
             display: flex;
-            justify-content: space-around;
-            padding: 15px 0;
-            border-top: 1px solid #f0f0f0;
+            gap: 25px;
+            margin-top: 20px;
         }
 
-        .action-btn {
+        .stat-item {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 5px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #666;
-            transition: all 0.3s ease;
-            padding: 10px 20px;
-            border-radius: 15px;
         }
 
-        .action-btn:hover {
-            background: var(--light);
-            color: var(--accent);
-            transform: scale(1.1);
-        }
-
-        .action-btn i {
+        .stat-icon {
             font-size: 1.5rem;
+            color: var(--accent);
         }
 
-        .action-btn span {
-            font-size: 0.9rem;
+        .stat-value {
+            font-size: 1rem;
             font-weight: 600;
         }
 
         /* Режим альбома (Grid) */
         .album-container {
             margin-top: 70px;
-            padding: 30px 20px;
+            padding: 20px;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 20px;
             max-width: 1400px;
             margin-left: auto;
             margin-right: auto;
+            background: #000;
+            min-height: calc(100vh - 70px);
         }
 
         .album-card {
-            background: white;
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(255, 182, 193, 0.2);
             transition: all 0.3s ease;
             cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .album-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 30px rgba(255, 182, 193, 0.4);
+            transform: scale(1.05);
+            border-color: var(--accent);
+            box-shadow: 0 10px 30px rgba(255, 133, 162, 0.3);
         }
 
         .album-image {
             width: 100%;
-            height: 280px;
+            height: 250px;
             object-fit: cover;
         }
 
@@ -224,7 +239,7 @@
         .album-title {
             font-size: 1.1rem;
             font-weight: 600;
-            color: var(--dark);
+            color: white;
             margin-bottom: 8px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -236,7 +251,7 @@
             display: flex;
             justify-content: space-between;
             font-size: 0.9rem;
-            color: #888;
+            color: #aaa;
         }
 
         .stat-item {
@@ -245,11 +260,58 @@
             gap: 5px;
         }
 
-        .stat-item i {
-            color: var(--accent);
+        /* Кнопки навигации */
+        .feed-controls {
+            position: fixed;
+            right: 20px;
+            bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 100;
         }
 
-        /* Модальное окно настроек */
+        .feed-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--accent);
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .feed-btn:hover {
+            background: var(--accent);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        /* Индикатор свайпа */
+        .swipe-indicator {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            z-index: 100;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Модальные окна и уведомления (остаются без изменений) */
         .settings-modal {
             display: none;
             position: fixed;
@@ -257,19 +319,19 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.9);
             z-index: 2000;
             align-items: center;
             justify-content: center;
         }
 
         .settings-content {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 25px;
             padding: 30px;
             max-width: 500px;
             width: 90%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
 
         .settings-header {
@@ -315,6 +377,7 @@
             border-radius: 15px;
             font-size: 1rem;
             transition: border-color 0.3s ease;
+            background: white;
         }
 
         .settings-input:focus {
@@ -342,33 +405,50 @@
             box-shadow: 0 6px 20px rgba(255, 133, 162, 0.4);
         }
 
-        /* Загрузка */
-        .loading {
-            display: flex;
-            flex-direction: column;
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.98);
+            z-index: 2500;
             align-items: center;
             justify-content: center;
-            padding: 60px 20px;
+        }
+
+        .modal-image {
+            max-width: 95%;
+            max-height: 95vh;
+            object-fit: contain;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.1);
             color: var(--accent);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 2rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
         }
 
-        .loading i {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            animation: spin 1s linear infinite;
+        .modal-close:hover {
+            background: var(--accent);
+            color: white;
+            transform: rotate(90deg);
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading p {
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
-        /* Уведомления */
         .notification {
             position: fixed;
             bottom: 30px;
@@ -394,106 +474,66 @@
             display: none !important;
         }
 
-        /* Модальное окно изображения */
-        .image-modal {
-            display: none;
+        .loading {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.95);
-            z-index: 2500;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-image {
-            max-width: 90%;
-            max-height: 90vh;
-            border-radius: 15px;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            background: white;
-            color: var(--accent);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 2rem;
-            font-weight: 700;
-            transition: all 0.3s ease;
-        }
-
-        .modal-close:hover {
-            background: var(--accent);
-            color: white;
-            transform: rotate(90deg);
-        }
-
-        /* Навигация в режиме ленты */
-        .feed-nav {
-            position: fixed;
-            right: 30px;
             top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            z-index: 100;
-        }
-
-        .nav-btn {
-            width: 50px;
-            height: 50px;
-            background: white;
-            border: 2px solid var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
             color: var(--accent);
-            font-size: 1.5rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255, 182, 193, 0.3);
         }
 
-        .nav-btn:hover {
-            background: var(--accent);
+        .loading i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Индикатор загрузки новых артов */
+        .load-more-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
             color: white;
-            transform: scale(1.1);
+            padding: 20px 40px;
+            border-radius: 25px;
+            display: none;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
         }
 
         @media (max-width: 768px) {
-            .feed-card {
-                max-width: 100%;
-            }
-
-            .feed-image {
-                height: 500px;
-            }
-
             .album-container {
                 grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
                 gap: 15px;
+                padding: 15px;
             }
 
-            .feed-nav {
+            .feed-controls {
                 right: 15px;
+                bottom: 80px;
             }
 
-            .nav-btn {
+            .feed-btn {
                 width: 45px;
                 height: 45px;
+            }
+
+            .feed-title {
+                font-size: 1.5rem;
+            }
+
+            .feed-caption {
+                font-size: 1rem;
             }
         }
     </style>
@@ -503,12 +543,12 @@
     <header class="header">
         <div class="logo">
             <span>🍬</span>
-            <span>Loli Art Gallery</span>
+            <span>Loli Art</span>
         </div>
         <div class="header-controls">
             <div class="view-toggle">
                 <button class="view-btn active" data-view="feed">
-                    <i class="fas fa-stream"></i> Лента
+                    <i class="fas fa-play-circle"></i> Лента
                 </button>
                 <button class="view-btn" data-view="album">
                     <i class="fas fa-th"></i> Альбом
@@ -520,28 +560,35 @@
         </div>
     </header>
 
-    <!-- Навигация в режиме ленты -->
-    <div class="feed-nav" id="feedNav">
-        <button class="nav-btn" id="prevArt" title="Предыдущий арт">
-            <i class="fas fa-chevron-up"></i>
-        </button>
-        <button class="nav-btn" id="randomArt" title="Случайный арт">
-            <i class="fas fa-random"></i>
-        </button>
-        <button class="nav-btn" id="nextArt" title="Следующий арт">
-            <i class="fas fa-chevron-down"></i>
-        </button>
-    </div>
-
-    <!-- Контент -->
-    <div id="feedContainer" class="feed-container">
-        <div class="loading">
-            <i class="fas fa-spinner"></i>
-            <p>Загрузка артов...</p>
+    <!-- TikTok-style лента -->
+    <div id="tiktokFeed" class="tiktok-feed">
+        <div class="swipe-indicator">
+            <i class="fas fa-chevron-up"></i> Свайпай вверх/вниз <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="feed-controls">
+            <button class="feed-btn" id="randomArt" title="Случайный арт">
+                <i class="fas fa-random"></i>
+            </button>
+            <button class="feed-btn" id="toggleSound" title="Звук">
+                <i class="fas fa-volume-up"></i>
+            </button>
+            <button class="feed-btn" id="shareArt" title="Поделиться">
+                <i class="fas fa-share-alt"></i>
+            </button>
+        </div>
+        <div class="feed-container" id="feedContainer">
+            <!-- Арты загружаются динамически -->
         </div>
     </div>
 
+    <!-- Режим альбома -->
     <div id="albumContainer" class="album-container hidden"></div>
+
+    <!-- Индикатор загрузки новых артов -->
+    <div class="load-more-indicator" id="loadMoreIndicator">
+        <i class="fas fa-spinner fa-spin"></i>
+        <span>Загружаем новые арты...</span>
+    </div>
 
     <!-- Модальное окно настроек -->
     <div class="settings-modal" id="settingsModal">
@@ -562,7 +609,7 @@
                 <label for="limitInput">
                     <i class="fas fa-image"></i> Количество артов для загрузки
                 </label>
-                <input type="number" id="limitInput" class="settings-input" value="10" min="5" max="50">
+                <input type="number" id="limitInput" class="settings-input" value="20" min="5" max="100">
             </div>
             
             <button class="btn-primary" id="saveSettings">
@@ -592,10 +639,14 @@
     
     <script>
         let currentView = 'feed';
-        let arts = [];
-        let currentIndex = 0;
+        let allArts = []; // Все загруженные арты
+        let usedArts = new Set(); // ID уже показанных артов
+        let currentArtIndex = 0;
         let apiKey = localStorage.getItem('loli_api_key') || 'bfd863c403dc5af6c02bd0ec3ea243c0';
-        let limit = parseInt(localStorage.getItem('loli_limit')) || 10;
+        let limit = parseInt(localStorage.getItem('loli_limit')) || 20;
+        let isLoading = false;
+        let touchStartY = 0;
+        let touchEndY = 0;
 
         // Инициализация
         document.getElementById('apiKeyInput').value = apiKey;
@@ -611,7 +662,7 @@
             });
         });
 
-        // Модальное окно настроек
+        // Модальные окна
         document.getElementById('settingsBtn').addEventListener('click', () => {
             document.getElementById('settingsModal').style.display = 'flex';
         });
@@ -643,63 +694,123 @@
             }
         });
 
-        // Навигация
-        document.getElementById('prevArt').addEventListener('click', () => {
-            if (currentIndex > 0) {
-                currentIndex--;
-                displayFeed();
-            }
-        });
-
-        document.getElementById('nextArt').addEventListener('click', async () => {
-            if (currentIndex < arts.length - 1) {
-                currentIndex++;
-                displayFeed();
-            } else {
-                await loadMoreArts();
-            }
-        });
-
+        // Кнопки управления
         document.getElementById('randomArt').addEventListener('click', () => {
-            if (arts.length > 0) {
-                currentIndex = Math.floor(Math.random() * arts.length);
-                displayFeed();
+            showRandomArt();
+        });
+
+        // Свайп для TikTok ленты
+        document.getElementById('feedContainer').addEventListener('touchstart', (e) => {
+            touchStartY = e.changedTouches[0].screenY;
+        });
+
+        document.getElementById('feedContainer').addEventListener('touchend', (e) => {
+            touchEndY = e.changedTouches[0].screenY;
+            handleSwipe();
+        });
+
+        // Клавиши для десктопа
+        document.addEventListener('keydown', (e) => {
+            if (currentView === 'feed') {
+                if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                    e.preventDefault();
+                    showPreviousArt();
+                }
+                if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S' || e.key === ' ') {
+                    e.preventDefault();
+                    showNextArt();
+                }
+                if (e.key === 'r' || e.key === 'R') {
+                    e.preventDefault();
+                    showRandomArt();
+                }
             }
         });
 
-        // Функции
+        // Колесо мыши
+        document.getElementById('feedContainer').addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (e.deltaY > 0) {
+                showNextArt();
+            } else {
+                showPreviousArt();
+            }
+        });
+
+        // Функция свайпа
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const swipeDistance = touchStartY - touchEndY;
+
+            if (Math.abs(swipeDistance) > swipeThreshold) {
+                if (swipeDistance > 0) {
+                    // Свайп вверх - следующий арт
+                    showNextArt();
+                } else {
+                    // Свайп вниз - предыдущий арт
+                    showPreviousArt();
+                }
+            }
+        }
+
+        // Загрузка артов
         async function loadArts() {
             try {
                 showLoading();
+                allArts = [];
+                usedArts.clear();
                 
-                // Используем прокси из proxy.js
                 const data = await window.ArtProxy.getArts(limit, 0);
                 
-                arts = data.arts || [];
-                currentIndex = 0;
-
-                if (arts.length === 0) {
+                if (data.arts && data.arts.length > 0) {
+                    allArts = data.arts;
+                    
+                    // Перемешиваем арты для случайного порядка
+                    shuffleArray(allArts);
+                    
+                    // В режиме ленты показываем первый арт
+                    if (currentView === 'feed') {
+                        showRandomArt();
+                    } else {
+                        displayAlbum();
+                    }
+                    
+                    showNotification(`Загружено ${allArts.length} артов`);
+                } else {
                     showError('Арты не найдены');
-                    return;
                 }
-
-                switchView();
-                showNotification(`Загружено ${arts.length} артов`);
             } catch (error) {
                 console.error('Ошибка при загрузке:', error);
                 showError(`Ошибка загрузки: ${error.message}`);
             }
         }
 
+        // Загрузка дополнительных артов
         async function loadMoreArts() {
+            if (isLoading) return;
+            
             try {
-                // Используем прокси для загрузки дополнительных артов
-                const data = await window.ArtProxy.getArts(limit, arts.length);
+                isLoading = true;
+                document.getElementById('loadMoreIndicator').style.display = 'flex';
+                
+                const offset = allArts.length;
+                const data = await window.ArtProxy.getArts(limit, offset);
                 
                 if (data.arts && data.arts.length > 0) {
-                    arts = [...arts, ...data.arts];
-                    currentIndex = arts.length - data.arts.length;
-                    displayFeed();
+                    // Добавляем новые арты и перемешиваем
+                    allArts = [...allArts, ...data.arts];
+                    shuffleArray(allArts);
+                    
+                    if (currentView === 'feed') {
+                        // Показываем случайный арт из новых
+                        const newArts = data.arts.filter(art => !usedArts.has(art.id));
+                        if (newArts.length > 0) {
+                            showArt(getRandomArt());
+                        }
+                    } else {
+                        displayAlbum();
+                    }
+                    
                     showNotification(`Загружены новые арты (+${data.arts.length})`);
                 } else {
                     showNotification('Больше артов нет');
@@ -707,65 +818,111 @@
             } catch (error) {
                 console.error('Ошибка загрузки:', error);
                 showError(`Ошибка: ${error.message}`);
+            } finally {
+                isLoading = false;
+                document.getElementById('loadMoreIndicator').style.display = 'none';
             }
         }
 
-        function switchView() {
-            if (currentView === 'feed') {
-                document.getElementById('feedContainer').classList.remove('hidden');
-                document.getElementById('albumContainer').classList.add('hidden');
-                document.getElementById('feedNav').classList.remove('hidden');
-                displayFeed();
-            } else {
-                document.getElementById('feedContainer').classList.add('hidden');
-                document.getElementById('albumContainer').classList.remove('hidden');
-                document.getElementById('feedNav').classList.add('hidden');
-                displayAlbum();
-            }
+        // Показать предыдущий арт
+        function showPreviousArt() {
+            if (allArts.length === 0) return;
+            
+            // Ищем предыдущий непоказанный арт
+            let attempts = 0;
+            let art;
+            do {
+                art = getRandomArt();
+                attempts++;
+            } while (usedArts.has(art.id) && attempts < 100);
+            
+            showArt(art);
         }
 
-        function displayFeed() {
-            const container = document.getElementById('feedContainer');
-            if (arts.length === 0) return;
+        // Показать следующий арт
+        function showNextArt() {
+            if (allArts.length === 0) return;
+            
+            // Если показано много артов, загружаем новые
+            if (usedArts.size >= allArts.length * 0.7) {
+                loadMoreArts();
+            }
+            
+            // Ищем следующий непоказанный арт
+            let attempts = 0;
+            let art;
+            do {
+                art = getRandomArt();
+                attempts++;
+            } while (usedArts.has(art.id) && attempts < 100);
+            
+            showArt(art);
+        }
 
-            const art = arts[currentIndex];
-            // Используем функцию из proxy.js для получения URL изображения
+        // Показать случайный арт
+        function showRandomArt() {
+            if (allArts.length === 0) return;
+            
+            const art = getRandomArt();
+            showArt(art);
+        }
+
+        // Получить случайный арт
+        function getRandomArt() {
+            if (allArts.length === 0) return null;
+            
+            // Если много артов уже показано, загружаем новые
+            if (usedArts.size >= allArts.length * 0.8) {
+                setTimeout(loadMoreArts, 1000);
+            }
+            
+            const randomIndex = Math.floor(Math.random() * allArts.length);
+            return allArts[randomIndex];
+        }
+
+        // Показать арт
+        function showArt(art) {
+            if (!art) return;
+            
+            usedArts.add(art.id);
             const imageUrl = window.ArtProxy.getArtImageUrl(art.id);
-
+            
+            const container = document.getElementById('feedContainer');
             container.innerHTML = `
-                <div class="feed-card">
-                    <img src="${imageUrl}" alt="${art.art_name || 'Арт'}" class="feed-image" onclick="openImage('${imageUrl}')">
-                    <div class="feed-info">
+                <div class="feed-item active">
+                    <div class="feed-image-container" onclick="openImage('${imageUrl}')">
+                        <img src="${imageUrl}" alt="${escapeHtml(art.art_name || 'Арт')}" class="feed-image">
+                    </div>
+                    <div class="feed-info-overlay">
                         <h2 class="feed-title">${escapeHtml(art.art_name || 'Без названия')}</h2>
                         <p class="feed-caption">${escapeHtml(art.caption || 'Без описания')}</p>
-                        
-                        <div class="feed-actions">
-                            <button class="action-btn">
-                                <i class="fas fa-heart"></i>
-                                <span>${art.stats?.likes || 0}</span>
-                            </button>
-                            <button class="action-btn">
-                                <i class="fas fa-eye"></i>
-                                <span>${art.stats?.views || 0}</span>
-                            </button>
-                            <button class="action-btn">
-                                <i class="fas fa-share-alt"></i>
-                                <span>Поделиться</span>
-                            </button>
+                        <div class="feed-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-heart stat-icon"></i>
+                                <span class="stat-value">${art.stats?.likes || 0}</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-eye stat-icon"></i>
+                                <span class="stat-value">${art.stats?.views || 0}</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-comment stat-icon"></i>
+                                <span class="stat-value">${art.stats?.comments || 0}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <p style="text-align: center; color: #888; margin-top: 10px;">
-                    ${currentIndex + 1} из ${arts.length}
-                </p>
             `;
         }
 
+        // Отображение альбома
         function displayAlbum() {
             const container = document.getElementById('albumContainer');
-            if (arts.length === 0) return;
-
-            container.innerHTML = arts.map(art => {
+            
+            // Перемешиваем арты для случайного порядка
+            const shuffledArts = [...allArts].sort(() => Math.random() - 0.5);
+            
+            container.innerHTML = shuffledArts.map(art => {
                 const imageUrl = window.ArtProxy.getArtImageUrl(art.id);
                 return `
                     <div class="album-card" onclick="openImage('${imageUrl}')">
@@ -786,6 +943,40 @@
                     </div>
                 `;
             }).join('');
+            
+            // Добавляем обработчик бесконечной прокрутки для альбома
+            if (!container.dataset.scrollListener) {
+                container.addEventListener('scroll', () => {
+                    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 100) {
+                        if (!isLoading) {
+                            loadMoreArts();
+                        }
+                    }
+                });
+                container.dataset.scrollListener = 'true';
+            }
+        }
+
+        // Переключение вида
+        function switchView() {
+            if (currentView === 'feed') {
+                document.getElementById('tiktokFeed').classList.remove('hidden');
+                document.getElementById('albumContainer').classList.add('hidden');
+                showRandomArt();
+            } else {
+                document.getElementById('tiktokFeed').classList.add('hidden');
+                document.getElementById('albumContainer').classList.remove('hidden');
+                displayAlbum();
+            }
+        }
+
+        // Вспомогательные функции
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
         }
 
         function openImage(url) {
@@ -794,8 +985,7 @@
         }
 
         function showLoading() {
-            const container = document.getElementById('feedContainer');
-            container.innerHTML = `
+            document.getElementById('feedContainer').innerHTML = `
                 <div class="loading">
                     <i class="fas fa-spinner"></i>
                     <p>Загрузка артов...</p>
@@ -804,9 +994,8 @@
         }
 
         function showError(message) {
-            const container = document.getElementById('feedContainer');
-            container.innerHTML = `
-                <div class="loading" style="color: #d32f2f;">
+            document.getElementById('feedContainer').innerHTML = `
+                <div class="loading" style="color: #ff6b6b;">
                     <i class="fas fa-exclamation-triangle"></i>
                     <p>${escapeHtml(message)}</p>
                 </div>
@@ -820,7 +1009,6 @@
             setTimeout(() => notification.classList.add('hidden'), 3000);
         }
 
-        // Вспомогательная функция для экранирования HTML
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
@@ -829,7 +1017,6 @@
 
         // Загрузка при старте
         document.addEventListener('DOMContentLoaded', () => {
-            // Ждем загрузки proxy.js
             setTimeout(() => {
                 if (window.ArtProxy) {
                     loadArts();
@@ -840,20 +1027,9 @@
             }, 100);
         });
 
-        // Управление клавишами
-        document.addEventListener('keydown', (e) => {
-            if (currentView === 'feed') {
-                if (e.key === 'ArrowUp') document.getElementById('prevArt').click();
-                if (e.key === 'ArrowDown') document.getElementById('nextArt').click();
-                if (e.key === ' ') {
-                    e.preventDefault();
-                    document.getElementById('randomArt').click();
-                }
-            }
-        });
-        
-        // Делаем функции глобальными для использования в onclick
+        // Делаем функции глобальными
         window.openImage = openImage;
+        window.showRandomArt = showRandomArt;
     </script>
 </body>
 </html>
